@@ -37,55 +37,71 @@ class CheckoutController extends Controller
             'address' => 'required',
             'city' => 'required',
             'state' => 'required',
-            'zip' => 'required',
+            'zip_code' => 'required',
             'country' => 'required',
+            'payment_mode' => 'required|in:' . Order::COD . ',' . Order::ONLINE,
         ]);
 
         try {
             DB::beginTransaction();
             
-            // Create the order
+            // Calculate total from cart items first
+            $cartItems = Cart::where('user_id', Session::get('user')->id)->with('product')->get();
+            $total = $cartItems->sum(function($item) {
+                return $item->qty * $item->product->variationPrice['selling_price'];
+            });
+
+            // Create the order with all required fields
             $order = Order::create([
                 'user_id' => Session::get('user')->id,
-                'email' => $request->email,
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'phone' => $request->phone,
-                'address' => $request->address,
-                'city' => $request->city,
-                'state' => $request->state,
-                'zip' => $request->zip,
-                'country' => $request->country,
-                'status' => 'pending',
+                'tracking_number' => 'ORD-' . uniqid(),
+                'address' => [
+                    'email' => $request->email,
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'phone' => $request->phone,
+                    'address' => $request->address,
+                    'city' => $request->city,
+                    'state' => $request->state,
+                    'zip_code' => $request->zip_code,
+                    'country' => $request->country,
+                ],
+                'payment_mode' => $request->payment_mode,
+                'status' => Order::PLACED,
+                'total' => $total,
+                'amount' => $total,
+                'discount_amount' => 0
             ]);
 
-            // Get cart items and create order items
-            $cartItems = Cart::where('user_id', Session::get('user')->id)->get();
-            $total = 0;
-
+            // Create order items
             foreach ($cartItems as $item) {
                 $order->items()->create([
                     'product_id' => $item->product_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->product->price,
+                    'quantity' => $item->qty,
+                    'price' => $item->product->variationPrice['selling_price'],
                 ]);
-                $total += $item->quantity * $item->product->price;
             }
-
-            $order->update(['total' => $total]);
-
-            // Process payment (implement your payment gateway logic here)
-            // $payment = PaymentGateway::process($total);
 
             // Clear the cart
             Cart::where('user_id', Session::get('user')->id)->delete();
 
             DB::commit();
-
-            return redirect()->route('order.success')->with('success', 'Order placed successfully!');
+            
+            return redirect()->route('website-order-success')->with('success', 'Order placed successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Something went wrong. Please try again.');
+            // Add detailed error logging
+            \Log::error('Order creation failed: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            return redirect()->back()
+                ->with('error', 'Error: ' . $e->getMessage())
+                ->withInput();
         }
+
+    }
+    
+    public function success(){
+        $order = Order::where('user_id', Session::get('user')->id)->latest()->first();
+        return view('website.order.success', compact('order'));
     }
 }

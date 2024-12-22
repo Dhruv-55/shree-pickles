@@ -5,9 +5,9 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="navigator-breadcrumb-wrapper">
-                        <a href="index.html">Home</a>
+                        <a href="{{ route('website-home') }}">Home</a>
                         <i class="fa-regular fa-chevron-right"></i>
-                        <a class="current" href="index.html">Shop Grid Sidebar</a>
+                        <a class="current" href="{{ route('website-product-view') }}">Product</a>
                     </div>
                 </div>
             </div>
@@ -27,7 +27,7 @@
                 <div class="col-xl-3 col-lg-12 pr--70 pr_lg--10 pr_sm--10 pr_md--5 rts-sticky-column-item">
                     <div class="sidebar-filter-main theiaStickySidebar">
                         <div class="single-filter-box">
-                            <h5 class="title">Widget Price Filter</h5>
+                            <h5 class="title"> Price Filter</h5>
                             <div class="filterbox-body">
                                 <div class="half-input-wrapper">
                                     <div class="single">
@@ -40,12 +40,11 @@
                                     </div>
                                 </div>
                                 <input type="range" class="range" 
-                                       wire:model="priceRange"
+                                       wire:model.live="priceRange"
                                        min="{{ $minAvailablePrice }}" 
                                        max="{{ $maxAvailablePrice }}">
                                 <div class="filter-value-min-max">
                                     <span>Price: ${{ $minPrice }} — ${{ $maxPrice }}</span>
-                                    <button type="button" class="rts-btn btn-primary" wire:click="applyPriceFilter">Filter</button>
                                 </div>
                             </div>
                         </div>
@@ -97,7 +96,6 @@
                             <div class="filterbox-body">
                                 <div class="category-wrapper">
                                     @foreach($brands as $brand)
-                                        <!-- single category -->
                                         <div class="single-category">
                                             <input id="brand{{ $brand->id }}" 
                                                    type="checkbox"
@@ -107,7 +105,24 @@
                                                 {{ $brand->name }}
                                             </label>
                                         </div>
-                                        <!-- single category end -->
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                        <div class="single-filter-box">
+                            <h5 class="title">Select Variations</h5>
+                            <div class="filterbox-body">
+                                <div class="category-wrapper">
+                                    @foreach($variations as $variation)
+                                        <div class="single-category">
+                                            <input id="var{{ $loop->index }}" 
+                                                   type="checkbox"
+                                                   wire:model="selectedVariations" 
+                                                   value="{{ $variation }}">
+                                            <label for="var{{ $loop->index }}">
+                                                {{ $variation }}
+                                            </label>
+                                        </div>
                                     @endforeach
                                 </div>
                             </div>
@@ -117,9 +132,9 @@
                 <div class="col-xl-9 col-lg-12">
                     <div class="filter-select-area">
                         <div class="top-filter">
-                            <span>Showing 1–20 of 57 results</span>
+                            <span></span>
                             <div class="right-end">
-                                <span>Sort: Short By Latest</span>
+                                {{-- <span>Sort: Short By Latest</span> --}}
                                 <div class="button-tab-area">
                                     <ul class="nav nav-tabs" id="myTab" role="tablist">
                                         <li class="nav-item" role="presentation">
@@ -169,7 +184,7 @@
                                 <div class="single-select">
                                     <select wire:model="selectedVariation">
                                         <option value="">All Weight</option>
-                                        @foreach (App\Models\Product::variations() as $key => $variation)
+                                        @foreach (App\Models\ProductVariation::variations() as $key => $variation)
                                         <option value="{{ $key }}">{{ $variation }}</option>
                                         @endforeach
                                     </select>
@@ -218,10 +233,11 @@
                                             <a href="{{ route('website-product-detail', $product->slug) }}">
                                                 <h4 class="title">{{ $product->name }}</h4>
                                             </a>
-                                            <span class="availability">{{ App\Models\Product::variation($product->id) }}</span>
+                                            
+                                            <span class="availability">{{ $product->variation }}</span>
                                             <div class="price-area">
-                                                <span class="current">{{ $product->price }}</span>
-                                                <div class="previous">{{ $product->price }}</div>
+                                                <span class="current">£{{ $product->variationPrice['selling_price'] }}</span>
+                                                <div class="previous">£{{ $product->variationPrice['original_price'] }}</div>
                                             </div>
                                             <div class="cart-counter-action">
                                                 @if(isset($quantity[$product->id]) && $quantity[$product->id] > 0)

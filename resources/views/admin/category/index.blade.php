@@ -57,6 +57,11 @@
                                 <a class="dropdown-item" href="{{ route('admin-category-update',['id' => $category->id])}}"
                                     ><i class="bx bx-edit-alt me-1"></i> Edit</a
                                 >
+                                @if(!$category->parent_id)
+                                <a class="dropdown-item" href="{{ route('admin-category-view-child',['id' => $category->id])}}"
+                                    ><i class="bx bx-info-circle me-1"></i> View Child</a
+                                >
+                                @endif
                                 </div>
                             </div>
                             </td>
@@ -65,6 +70,7 @@
                         
                     </tbody>
                 </table>
+                {{ $categories->links() }}
                 </div>
         </div>
     </div>

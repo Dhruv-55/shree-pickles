@@ -34,12 +34,32 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="mb-3">
-                      <label for="exampleFormControlSelect1" class="form-label">Category</label>
-                      <select class="form-select" name="category_id" id="exampleFormControlSelect1" aria-label="Default select example">
-                        <option value="">Select Category</option>
-                        @foreach (\App\Models\Category::active()->get() as $category)
-                            <option value="{{ $category->id }}" {{ $product->category_id == $category->id ? 'selected' : '' }} >{{ $category->name }}</option>                            
+                      <label for="parent_category" class="form-label">Parent Category</label>
+                      <select class="form-select" name="parent_category_id" id="parent_category" aria-label="Default select example">
+                        <option value="">Select Parent Category</option>
+                        @foreach (\App\Models\Category::whereNull('parent_id')->active()->get() as $parentCategory)
+                            <option value="{{ $parentCategory->id }}" 
+                                {{ ($product->category && $product->category->parent_id == $parentCategory->id) || 
+                                   ($product->category && !$product->category->parent_id && $product->category_id == $parentCategory->id) 
+                                   ? 'selected' : '' }}>
+                                {{ $parentCategory->name }}
+                            </option>
                         @endforeach
+                      </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                      <label for="child_category" class="form-label">Child Category</label>
+                      <select class="form-select" name="category_id" id="child_category" aria-label="Default select example">
+                        <option value="">Select Child Category</option>
+                        @if($product->category && $product->category->parent_id)
+                            @foreach (\App\Models\Category::where('parent_id', $product->category->parent_id)->active()->get() as $childCategory)
+                                <option value="{{ $childCategory->id }}" {{ $product->category_id == $childCategory->id ? 'selected' : '' }}>
+                                    {{ $childCategory->name }}
+                                </option>
+                            @endforeach
+                        @endif
                       </select>
                     </div>
                 </div>
@@ -64,19 +84,7 @@
                       </select>
                     </div>
                 </div>
-                <div class="col-md-3">
-                  <div class="mb-3">
-                    <label for="exampleFormControlSelect1" class="form-label">Variation</label>
-                    <select class="form-select" name="qty_type" id="exampleFormControlSelect1" aria-label="Default select example">
-                      <option value="">Select Variation</option>
-                        @foreach (\App\Models\Product::variations() as $key => $variation)
-                            <option value="{{ $key }}" {{ $product->qty_type == $key ? 'selected' : '' }}>
-                                {{ $variation }}
-                            </option>
-                        @endforeach
-                    </select>
-                  </div>
-              </div>
+              
             </div>
             <div class="row">
               <div class="col-md-6">
@@ -103,24 +111,6 @@
               </div>
             </div>
             <div class="row">
-                <div class="col-md-3">
-                    <div class="mb-3">
-                      <label class="form-label" for="basic-default-company">Original Price</label>
-                      <input type="number" class="form-control" id="basic-default-company" name="original_price"  value="{{ $product->original_price }}" />
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="mb-3">
-                      <label class="form-label" for="basic-default-company">Selling Price</label>
-                      <input type="number" class="form-control" id="basic-default-company" name="selling_price"  value="{{ $product->selling_price }}" />
-                    </div>
-                </div>
-                <div class="col-md-3">
-                  <div class="mb-3">
-                    <label class="form-label" for="basic-default-company">Quantity</label>
-                    <input type="number" class="form-control" id="basic-default-company" name="quantity"  value="{{ $product->quantity }}" />
-                  </div>
-              </div>
               <div class="col-md-3">
                 <div class="mb-3">
                   <label for="exampleFormControlSelect1" class="form-label">Status</label>
@@ -131,14 +121,12 @@
                   </select>
                 </div>
             </div>
-            </div>
-            <div class="row">
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="formFile" class="form-label">Images</label>
-                  <input class="form-control" type="file" name="images[]" id="filer_input" multiple/>
-                </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="formFile" class="form-label">Images</label>
+                <input class="form-control" type="file" name="images[]" id="filer_input" multiple/>
               </div>
+            </div>
             </div>
             @if($product->images)
               <div class="row mt-4 mb-4" id="existing-images">
@@ -204,6 +192,34 @@ $(document).ready(function () {
                 },
                 error: function() {
                     alert('Error deleting image.');
+                }
+            });
+        }
+    });
+
+    // Parent-child category functionality
+    $('#parent_category').on('change', function() {
+        let parentId = $(this).val();
+        let childSelect = $('#child_category');
+        
+        // Clear existing options
+        childSelect.html('<option value="">Select Child Category</option>');
+        
+        if(parentId) {
+            // Fetch child categories
+            $.ajax({
+                url: `/admin/product/get-child-categories/${parentId}`,
+                method: 'GET',
+                success: function(data) {
+                    if (Array.isArray(data)) {
+                        data.forEach(function(category) {
+                            childSelect.append(`<option value="${category.id}">${category.name}</option>`);
+                        });
+                    }
+                },
+                error: function(error) {
+                    console.error('Error fetching child categories:', error);
+                    childSelect.html('<option value="">Error loading categories</option>');
                 }
             });
         }

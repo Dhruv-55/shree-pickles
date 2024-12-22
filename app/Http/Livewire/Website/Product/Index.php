@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use App\Models\Category;
+use App\Models\ProductVariation;
 
 class Index extends Component
 {
@@ -27,6 +28,10 @@ class Index extends Component
     public $maxAvailablePrice;
     public $priceRange;
     public $selectedCategories = [];
+    public $selectedBrands = [];
+    public $categorySlug;
+    public $variations;
+    public $selectedVariations = [];
 
     public function __construct($user)
     {
@@ -45,23 +50,30 @@ class Index extends Component
             return redirect()->route('website-auth-login');
         }
 
+        // Check if a variation is selected, if not, select the first available variation
+        $variationId = $this->selectedVariation ?: ProductVariation::where('product_id', $productId)->first()->id;
+
         $this->quantity[$productId] = 1;
         
         // Add to database
         Cart::updateOrCreate(
             [
                 'user_id' => Session::get('user')->id,
-                'product_id' => $productId
+                'product_id' => $productId,
+                'variation_id' => $variationId
             ],
             ['qty' => 1]
         );
+
+        // Emit the cart updated event
+        $this->emit('cartUpdated');
     }
 
 
-    public function mount($products,$categories,$search=null){
-        $this->products = $products;
+    public function mount($products, $categories, $search=null, $categorySlug=null) {
         $this->categories = $categories;
         $this->search = $search;
+        $this->categorySlug = $categorySlug;
 
         // Get user's cart items if logged in
         $cartItems = [];
@@ -72,20 +84,39 @@ class Index extends Component
                 ->toArray();
         }
 
+        // Load products based on category slug
+        if ($this->categorySlug) {
+            $this->products = Product::with(['category'])
+                ->whereHas('category', function($q) {
+                    $q->where('slug', $this->categorySlug);
+                })
+                ->get();
+            
+            // Set selected category
+            $category = Category::where('slug', $this->categorySlug)->first();
+            if ($category) {
+                $this->selectedCategories = [$category->id];
+            }
+        } else {
+            $this->products = $products;
+        }
+
         // Initialize quantities for all products
         foreach ($this->products as $product) {
             $this->quantity[$product->id] = $cartItems[$product->id] ?? 0;
         }
 
-        $this->loadProducts(); // Load initial products
-
-        // Get the min and max prices from your products table
-        $this->minAvailablePrice = Product::min('selling_price') ?? 0;
-        $this->maxAvailablePrice = Product::max('selling_price') ?? 150;
+        // Update to get min/max prices from product_variations table
+        $this->minAvailablePrice = DB::table('product_variations')->min('selling_price') ?? 0;
+        $this->maxAvailablePrice = DB::table('product_variations')->max('selling_price') ?? 150;
         
         // Set initial values
         $this->minPrice = $this->minAvailablePrice;
         $this->maxPrice = $this->maxAvailablePrice;
+        $this->priceRange = $this->maxPrice;
+
+        // Initialize variations
+        $this->variations = ProductVariation::variations();
     }
 
     public function incrementQuantity($productId)
@@ -101,10 +132,14 @@ class Index extends Component
             Cart::updateOrCreate(
                 [
                     'user_id' => Session::get('user')->id,
-                    'product_id' => $productId
+                    'product_id' => $productId,
+                    'variation_id' => $this->selectedVariation
                 ],
                 ['qty' => $this->quantity[$productId]]
             );
+
+            // Emit the cart updated event
+            $this->emit('cartUpdated');
         }
     }
 
@@ -130,6 +165,9 @@ class Index extends Component
                     ->where('product_id', $productId)
                     ->update(['qty' => $this->quantity[$productId]]);
             }
+
+            // Emit the cart updated event
+            $this->emit('cartUpdated');
         }
     }
 
@@ -145,6 +183,8 @@ class Index extends Component
             'selectedBrand', 
             'selectedVariation',
             'selectedCategories',
+            'selectedBrands',
+            'selectedVariations',
             'minPrice',
             'maxPrice'
         ]);
@@ -154,9 +194,11 @@ class Index extends Component
         $this->maxPrice = $this->maxAvailablePrice;
     }
 
-    public function applyPriceFilter()
+    // Add this new method
+    public function updatedPriceRange($value)
     {
-        // The render method will automatically apply the price filter
+        $this->maxPrice = (int)$value;
+        $this->loadProducts();
     }
 
     // Add this method to help debug
@@ -179,9 +221,46 @@ class Index extends Component
     {
         $query = Product::query();
 
+        // Join with product_variations table
+        $query->join('product_variations', 'products.id', '=', 'product_variations.product_id');
+
+        // Apply category slug filter
+        if ($this->categorySlug) {
+            $query->whereHas('category', function($q) {
+                $q->where('slug', $this->categorySlug);
+            });
+        }
+
         // Apply category input filter
         if ($this->category_input) {
             $query->whereIn('category_id', $this->category_input);
+        }
+
+        // Apply selected categories filter
+        if (!empty($this->selectedCategories)) {
+            // dd($this->selectedCategories);
+            $query->whereIn('category_id', $this->selectedCategories);
+        }
+
+        // Apply brand filter
+        if (!empty($this->selectedBrands)) {
+            $query->whereIn('brand_id', $this->selectedBrands);
+        }
+
+        // Apply variation filter
+        if ($this->selectedVariation) {
+            $query->where('product_variations.variation_id', $this->selectedVariation);
+        }
+
+        // Apply variations filter
+        if (!empty($this->selectedVariations)) {
+            $query->whereIn('product_variations.variation_id', $this->selectedVariations);
+        }
+
+        // Update price filter to use product_variations table
+        if ($this->minPrice !== null && $this->maxPrice !== null) {
+            $query->where('product_variations.selling_price', '>=', $this->minPrice)
+                  ->where('product_variations.selling_price', '<=', $this->maxPrice);
         }
 
         // Apply search filter
@@ -194,38 +273,18 @@ class Index extends Component
             });
         }
 
-        // Apply selected categories filter
-        if (!empty($this->selectedCategories)) {
-            $query->whereIn('category_id', $this->selectedCategories);
-        }
-
-        // Apply single category filter
-        if ($this->selectedCategory) {
-            $query->where('category_id', $this->selectedCategory);
-        }
-
-        // Apply brand filter
-        if ($this->selectedBrand) {
-            $query->where('brand_id', $this->selectedBrand);
-        }
-
-        // Apply variation filter
-        if ($this->selectedVariation) {
-            $query->where('qty_type', $this->selectedVariation);
-        }
-
-        // Apply price filter
-        if ($this->minPrice && $this->maxPrice) {
-            $query->whereBetween('selling_price', [$this->minPrice, $this->maxPrice]);
-        }
-
-        // Get the filtered products
-        $this->products = $query->get();
+        \Log::info('SQL Query: ' . $query->toSql());
+        \Log::info('Bindings: ', $query->getBindings());
+        
+        // Make sure to select products.* to avoid column ambiguity
+        $this->products = $query->select('products.*')->distinct()->get();
     }
 
     public function render()
     {
+        // Only load products if filters have changed
         $this->loadProducts();
+
 
         // Load brands if not already loaded
         if (!$this->brands) {

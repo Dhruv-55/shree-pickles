@@ -6,6 +6,8 @@ use Livewire\Component;
 use App\Models\Cart;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use App\Models\ProductVariation;
+use App\Models\Product;
 
 class Home extends Component
 {
@@ -18,6 +20,8 @@ class Home extends Component
     public $sliders;
     public $quantity = [];
     public $cartQuantity = [];
+    public $selectedVariation = [];
+    public $variationPrices = [];
 
     public function mount()
     {
@@ -28,12 +32,16 @@ class Home extends Component
         if (Session::has('user')) {
             $cartItems = Cart::where('user_id', Session::get('user')->id)
                 ->get()
-                ->pluck('qty', 'product_id')
+                ->mapWithKeys(function ($item) {
+                    return [$item->product_id => [
+                        'qty' => $item->qty,
+                        'variation_id' => $item->variation_id
+                    ]];
+                })
                 ->toArray();
-                
         }
 
-        // Initialize quantities for all product collections
+        // Initialize quantities and variations for all product collections
         $allProducts = collect()
             ->merge($this->products ?? [])
             ->merge($this->latest_products ?? [])
@@ -42,8 +50,35 @@ class Home extends Component
             ->merge($this->new_arrivals ?? []);
 
         foreach ($allProducts->unique('id') as $product) {
-            // Set quantity to cart quantity if exists, otherwise 0
-            $this->quantity[$product->id] = $cartItems[$product->id] ?? 0;
+            // Set quantity from cart if exists, otherwise 0
+            $this->quantity[$product->id] = $cartItems[$product->id]['qty'] ?? 0;
+            
+            // Set variation from cart if exists
+            $this->selectedVariation[$product->id] = $cartItems[$product->id]['variation_id'] ?? null;
+        }
+
+        // Initialize with default variations
+        foreach ($this->trending_products as $product) {
+            $defaultVariation = Product::getVariations($product->id)->first();
+            if ($defaultVariation) {
+                $this->selectedVariation[$product->id] = $defaultVariation->id;
+                $this->variationPrices[$product->id] = [
+                    'selling_price' => $defaultVariation->selling_price,
+                    'original_price' => $defaultVariation->original_price
+                ];
+            }
+        }
+        
+        // Do the same for new arrivals
+        foreach ($this->new_arrivals as $product) {
+            $defaultVariation = Product::getVariations($product->id)->first();
+            if ($defaultVariation) {
+                $this->selectedVariation[$product->id] = $defaultVariation->id;
+                $this->variationPrices[$product->id] = [
+                    'selling_price' => $defaultVariation->selling_price,
+                    'original_price' => $defaultVariation->original_price
+                ];
+            }
         }
     }
 
@@ -56,14 +91,17 @@ class Home extends Component
         if (isset($this->quantity[$productId])) {
             $this->quantity[$productId]++;
             
-            // Update or create cart entry
+            // Update or create cart entry with variation
             Cart::updateOrCreate(
                 [
                     'user_id' => Session::get('user')->id,
-                    'product_id' => $productId
+                    'product_id' => $productId,
+                    'variation_id' => $this->selectedVariation[$productId] ?? null
                 ],
                 ['qty' => $this->quantity[$productId]]
             );
+
+            $this->emit('cartUpdated');
         }
     }
 
@@ -80,15 +118,19 @@ class Home extends Component
                 // Remove from database if quantity is 0
                 Cart::where('user_id', Session::get('user')->id)
                     ->where('product_id', $productId)
+                    ->where('variation_id', $this->selectedVariation[$productId] ?? null)
                     ->delete();
                     
                 unset($this->quantity[$productId]);
             } else {
-                // Update quantity in database
+                // Update quantity in database with variation
                 Cart::where('user_id', Session::get('user')->id)
                     ->where('product_id', $productId)
+                    ->where('variation_id', $this->selectedVariation[$productId] ?? null)
                     ->update(['qty' => $this->quantity[$productId]]);
             }
+
+            $this->emit('cartUpdated');
         }
     }
 
@@ -100,14 +142,42 @@ class Home extends Component
 
         $this->quantity[$productId] = 1;
         
-        // Add to database
+        // Create cart entry with variation if selected
+        $variationId = $this->selectedVariation[$productId] ?? null;
+        
         Cart::updateOrCreate(
             [
                 'user_id' => Session::get('user')->id,
-                'product_id' => $productId
+                'product_id' => $productId,
+                'variation_id' => $variationId
             ],
             ['qty' => 1]
         );
+
+        // Emit event to update header
+        $this->emit('cartUpdated');
+    }
+
+    public function updatePrices($productId)
+    {
+        $variation = ProductVariation::find($this->selectedVariation[$productId]);
+        if ($variation) {
+            $this->variationPrices[$productId] = [
+                'selling_price' => $variation->selling_price,
+                'original_price' => $variation->original_price
+            ];
+        }
+    }
+
+    public function updatePrice($productId, $variationId)
+    {
+        $variation = ProductVariation::find($variationId);
+        if ($variation) {
+            $this->variationPrices[$productId] = [
+                'selling_price' => $variation->selling_price,
+                'original_price' => $variation->original_price
+            ];
+        }
     }
 
     public function render()

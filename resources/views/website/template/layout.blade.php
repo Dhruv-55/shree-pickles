@@ -6,11 +6,13 @@
     <meta name="description" content="Ekomart-Grocery-Store(e-Commerce) HTML Template: A sleek, responsive, and user-friendly HTML template designed for online grocery stores.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="keywords" content="Grocery, Store, stores">
-    <title>Ekomart-Grocery-Store(e-Commerce) HTML Template</title>
+    <title>Shree Sprices @yield('title')</title>
     <link rel="shortcut icon" type="image/x-icon" href="assets/images/fav.png">
     <!-- plugins css -->
     <link rel="stylesheet preload" href="{{ asset('website-assets/css/plugins.css')  }}" as="style">
     <link rel="stylesheet preload" href="{{ asset('website-assets/css/style.css') }}" as="style">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+
 @livewireStyles
 </head>
 
@@ -406,6 +408,46 @@
     <!-- custom js -->
     <script defer src="{{ asset('website-assets/js/main.js') }}"></script>
     <!-- header style two End -->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <script>
+      toastr.options = {
+          "closeButton": true,
+          "debug": false,
+          "newestOnTop": false,
+          "progressBar": true,
+          "positionClass": "toast-top-right",
+          "preventDuplicates": false,
+          "onclick": null,
+          "showDuration": "300",
+          "hideDuration": "1000",
+          "timeOut": "5000",
+          "extendedTimeOut": "1000",
+          "showEasing": "swing",
+          "hideEasing": "linear",
+          "showMethod": "fadeIn",
+          "hideMethod": "fadeOut"
+      };
+  
+       @if(Session::has('success'))
+           toastr.success("{{ Session::get('success') }}", "Success");
+       @endif
+  
+       @if(Session::has('error'))
+           toastr.error("{{ Session::get('error') }}", "Error");
+       @endif
+       @if ($errors->any())
+           @foreach ($errors->all() as $error)
+               toastr.error("{{ $error }}", "Validation Error");
+           @endforeach
+       @endif
+
+  
+  </script>   
+
 @livewireScripts
 </body>
 

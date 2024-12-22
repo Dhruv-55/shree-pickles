@@ -9,7 +9,7 @@ class Cart extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'user_id','product_id','qty'
+        'user_id','product_id','qty','variation_id'
     ];
 
     protected $appends = ['total_amount'];

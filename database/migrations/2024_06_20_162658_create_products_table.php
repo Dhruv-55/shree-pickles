@@ -16,15 +16,13 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('category_id');
+            $table->unsignedBigInteger('parent_category_id');
             $table->integer('brand_id')->nullable();
             $table->string('name');
             $table->string('slug');
             $table->mediumText('short_description');
             $table->longText('description');
-            $table->integer('original_price');
-            $table->integer('selling_price');
-            $table->integer('quantity');
-            $table->enum('qty_type',[1,2,3])->comment('1:200,2:500,3:1000');
+            // $table->enum('qty_type',[1,2,3])->comment('1:200,2:500,3:1000');
             $table->longText('images')->nullable();
             $table->tinyInteger('trending')->default(2)->comment('1 : Yes , 2 : No');
             $table->tinyInteger('status')->default(1)->comment('1 : Active , 2 : In Active');

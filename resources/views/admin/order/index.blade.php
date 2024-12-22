@@ -28,7 +28,8 @@
                             <td>{{ $order->total}}</td>
                             <td>{{ $order->tracking_number }}</td>
                             <td>
-                                @if($order->status == \App\Models\Order::PLACED)
+                               <span class="badge bg-label-primary me-1"> {{$order->status}}</span>
+                                {{-- @if($order->status == \App\Models\Order::PLACED)
                                 <span class="badge bg-label-warning me-1">Placed</span></td>
                                 @elseif($order->status == \App\Models\Order::DISPATCHED)
                                 <span class="badge bg-label-info me-1">Dispacthed</span></td>
@@ -38,7 +39,7 @@
                                 <span class="badge bg-label-success me-1">Approved</span></td>
                                 @else
                                 <span class="badge bg-label-danger me-1">Canceled</span></td>
-                                @endif
+                                @endif --}}
                             <td>
                             <div class="dropdown">
                                 <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
@@ -57,6 +58,7 @@
                     </tbody>
                 </table>
                 </div>
+                {{$orders->links()}}
         </div>
     </div>
 </div>

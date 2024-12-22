@@ -14,10 +14,7 @@
                                 "autoplay":{
                                     "delay":"4000"
                                 },
-                                "navigation":{
-                                    "nextEl":".swiper-button-next",
-                                    "prevEl":".swiper-button-prev"
-                                },
+                             
                                 "breakpoints":{
                                 "0":{
                                     "slidesPerView":1,
@@ -71,8 +68,8 @@
                                     <!-- single swiper start -->
                                 </div>
 
-                                <button class="swiper-button-next"><i class="fa-regular fa-arrow-right"></i></button>
-                                <button class="swiper-button-prev"><i class="fa-regular fa-arrow-left"></i></button>
+                                {{-- <button class="swiper-button-next"><i class="fa-regular fa-arrow-right"></i></button>
+                                <button class="swiper-button-prev"><i class="fa-regular fa-arrow-left"></i></button> --}}
                             </div>
                         </div>
                     </div>
@@ -81,57 +78,7 @@
         </div>
         <!-- rts banner area end -->
         <!-- rts category area satart -->
-        <div class="rts-caregory-area-one ">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="category-area-main-wrapper-one">
-                            <div class="swiper mySwiper-category-1 swiper-data" data-swiper='{
-                                "spaceBetween":12,
-                                "slidesPerView":10,
-                                "loop": true,
-                                "speed": 1000,
-                                "breakpoints":{
-                                "0":{
-                                    "slidesPerView":2,
-                                    "spaceBetween": 12},
-                                "320":{
-                                    "slidesPerView":2,
-                                    "spaceBetween":12},
-                                "480":{
-                                    "slidesPerView":3,
-                                    "spaceBetween":12},
-                                "640":{
-                                    "slidesPerView":4,
-                                    "spaceBetween":12},
-                                "840":{
-                                    "slidesPerView":4,
-                                    "spaceBetween":12},
-                                "1140":{
-                                    "slidesPerView":10,
-                                    "spaceBetween":12}
-                                }
-                            }'>
-                                <div class="swiper-wrapper">
-                                    <!-- single swiper start -->
-                                    @foreach ($categories as $category)
-                                    <div class="swiper-slide">
-                                        <a href="shop-grid-sidebar.html" class="single-category-one">
-                                            <img src="{{ env('CATEGORY_IMAGE_URL').'/'.$category->image }}" alt="category">
-                                            <p>{{ $category->name }}</p>
-                                        </a>
-                                    </div>
-                                    @endforeach
-                                    <!-- single swiper start -->
-                                    
-                                    <!-- single swiper start -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+       
         <!-- rts category area end -->
     </div>
 
@@ -233,7 +180,7 @@
                 <div class="col-lg-12">
                     <div class="title-area-between">
                         <h2 class="title-left">
-                            Trending Products
+                            Everyday Sale
                         </h2>
                         
                     </div>
@@ -277,10 +224,10 @@
                                             <a href="{{ route('website-product-detail', $product->slug) }}">
                                                 <h4 class="title">{{ $product->name }}</h4>
                                             </a>
-                                            <span class="availability">{{ App\Models\Product::variation($product->id) }}</span>
+                                            <span class="availability">{{ $product->variation }}</span>
                                             <div class="price-area">
-                                                <span class="current">${{ $product->selling_price }}</span>
-                                                <div class="previous">${{ $product->original_price }}</div>
+                                                <span class="current">£{{ $product->variationPrice['selling_price'] }}</span>
+                                                <div class="previous">£{{ $product->variationPrice['original_price'] }}</div>
                                             </div>
                                             <div class="cart-counter-action">
                                                 @if(isset($quantity[$product->id]) && $quantity[$product->id] > 0)
@@ -325,16 +272,14 @@
             </div>
         </div>
     </div>
-    <!-- best selling groceris end -->
 
-    <!-- best selling groceris -->
     <div class="weekly-best-selling-area rts-section-gap bg_light-1">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
                     <div class="title-area-between">
                         <h2 class="title-left">
-                            Our Products
+                            New Arrivals
                         </h2>
                         
                     </div>
@@ -346,7 +291,7 @@
                         <!-- first tabs area start-->
                         <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
                             <div class="row g-4">
-                                @foreach ($products as $product)
+                                @foreach ($new_arrivals as $product)
                                 <div class="col-xxl-2 col-xl-3 col-lg-4 col-md-4 col-sm-6 col-12">
                                     <div class="single-shopping-card-one">
                                         <!-- iamge and sction area start -->
@@ -378,10 +323,10 @@
                                             <a href="{{ route('website-product-detail', $product->slug) }}">
                                                 <h4 class="title">{{ $product->name }}</h4>
                                             </a>
-                                            <span class="availability">{{ App\Models\Product::variation($product->id) }}</span>
+                                            <span class="availability">{{ $product->variation }}</span>
                                             <div class="price-area">
-                                                <span class="current">${{ $product->selling_price }}</span>
-                                                <div class="previous">${{ $product->original_price }}</div>
+                                                <span class="current">£{{ $product->variationPrice['selling_price'] }}</span>
+                                                <div class="previous">£{{ $product->variationPrice['original_price'] }}</div>
                                             </div>
                                             <div class="cart-counter-action">
                                                 @if(isset($quantity[$product->id]) && $quantity[$product->id] > 0)
@@ -427,9 +372,70 @@
         </div>
     </div>
     <!-- best selling groceris end -->
+    <div class="rts-caregory-area-one "style="padding:10px">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="title-area-between">
+                        <h2 class="title-left">
+                            Shop By Category
+                        </h2>
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="category-area-main-wrapper-one">
+                        <div class="swiper mySwiper-category-1 swiper-data" data-swiper='{
+                            "spaceBetween":12,
+                            "slidesPerView":10,
+                            "loop": false,
+                            "speed": 1000,
+                            "breakpoints":{
+                            "0":{
+                                "slidesPerView":2,
+                                "spaceBetween": 12},
+                            "320":{
+                                "slidesPerView":2,
+                                "spaceBetween":12},
+                            "480":{
+                                "slidesPerView":3,
+                                "spaceBetween":12},
+                            "640":{
+                                "slidesPerView":4,
+                                "spaceBetween":12},
+                            "840":{
+                                "slidesPerView":4,
+                                "spaceBetween":12},
+                            "1140":{
+                                "slidesPerView":10,
+                                "spaceBetween":12}
+                            }
+                        }'>
+                            <div class="swiper-wrapper">
+                                @foreach ($categories->unique('id') as $category)
+                                <div class="swiper-slide">
+                                    <a href="shop-grid-sidebar.html" class="single-category-one">
+                                        <img src="{{ env('CATEGORY_IMAGE_URL').'/'.$category->image }}" alt="category">
+                                        <p>{{ $category->name }}</p>
+                                    </a>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- best selling groceris -->
+   
+    <!-- best selling groceris end -->
 
+    
     <!-- rts category feature area start -->
-    <div class="category-feature-area rts-section-gapTop">
+    {{-- <div class="category-feature-area rts-section-gapTop">
         <div class="container">
             <div class="row g-4">
                 <div class="col-lg-3 col-md-6 col-sm-12 col-12">
@@ -514,225 +520,8 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
     <!-- rts category feature area end -->
 
-    <!-- rts top tranding product area -->
-    <div class="top-tranding-product rts-section-gap">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="title-area-between">
-                        <h2 class="title-left mb--10">
-                            Top Trending Products
-                        </h2>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="cover-card-main-over">
-                        <div class="row g-4">
-                            @foreach ($trending_products as $product)
-                                
-                            <div class="col-xl-3 col-md-6 col-sm-12 col-12">
-                                <div class="single-shopping-card-one tranding-product">
-                                    <a href="{{ route('website-product-detail', $product->slug) }}" class="thumbnail-preview">
-                                        <div class="badge">
-                                            <span>{{ $product->discount_percentage }}% <br> 
-                                                Off
-                                            </span>
-                                            <i class="fa-solid fa-bookmark"></i>
-                                        </div>
-                                        <img src="{{ App\Models\Product::getFirstImage($product->id) }}" alt="grocery">
-                                    </a>
-                                    <div class="body-content">
-
-                                        <a href="{{ route('website-product-detail', $product->slug) }}">
-                                            <h4 class="title">{{ $product->name }}</h4>
-                                        </a>
-                                        <span class="availability">{{ App\Models\Product::variation($product->id) }}</span>
-                                        <div class="price-area">
-                                            <span class="current">${{ $product->selling_price }}</span>
-                                            <div class="previous">${{ $product->original_price }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                            
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- rts top tranding product area end -->
-
-    <!-- rts top tranding product area -->
-    <div class="blog-area-start rts-section-gapBottom">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="title-area-between">
-                        <h2 class="title-left mb--0">
-                            Latest Blog Post Insights
-                        </h2>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="cover-card-main-over">
-                        <div class="row g-4">
-                            <div class="col-lg-3 col-md-6 col-sm-12">
-                                <!-- single blog area start -->
-                                <div class="single-blog-area-start">
-                                    <a href="blog-details.html" class="thumbnail">
-                                        <img src="assets/images/blog/01.jpg" alt="blog-area">
-                                    </a>
-                                    <div class="blog-body">
-                                        <div class="top-area">
-                                            <div class="single-meta">
-                                                <i class="fa-light fa-clock"></i>
-                                                <span>15 Sep, 2023</span>
-                                            </div>
-                                            <div class="single-meta">
-                                                <i class="fa-regular fa-folder"></i>
-                                                <span>Modern Fashion</span>
-                                            </div>
-                                        </div>
-                                        <a href="blog-details.html">
-                                            <h4 class="title">
-                                                Shion Fixation: Fueling Your Passion
-                                                for All Things Stylish
-                                            </h4>
-                                        </a>
-                                        <a href="blog-details.html" class="shop-now-goshop-btn">
-                                            <span class="text">Read Details</span>
-                                            <div class="plus-icon">
-                                                <i class="fa-sharp fa-regular fa-plus"></i>
-                                            </div>
-                                            <div class="plus-icon">
-                                                <i class="fa-sharp fa-regular fa-plus"></i>
-                                            </div>
-                                        </a>
-                                    </div>
-                                </div>
-                                <!-- single blog area end -->
-                            </div>
-                            <div class="col-lg-3 col-md-6 col-sm-12">
-                                <!-- single blog area start -->
-                                <div class="single-blog-area-start">
-                                    <a href="blog-details.html" class="thumbnail">
-                                        <img src="assets/images/blog/02.jpg" alt="blog-area">
-                                    </a>
-                                    <div class="blog-body">
-                                        <div class="top-area">
-                                            <div class="single-meta">
-                                                <i class="fa-light fa-clock"></i>
-                                                <span>15 Sep, 2023</span>
-                                            </div>
-                                            <div class="single-meta">
-                                                <i class="fa-regular fa-folder"></i>
-                                                <span>Modern Fashion</span>
-                                            </div>
-                                        </div>
-                                        <a href="blog-details.html">
-                                            <h4 class="title">
-                                                Ashion Fixation: Fueling Your Passion
-                                                for All Things Stylish
-                                            </h4>
-                                        </a>
-                                        <a href="blog-details.html" class="shop-now-goshop-btn">
-                                            <span class="text">Read Details</span>
-                                            <div class="plus-icon">
-                                                <i class="fa-sharp fa-regular fa-plus"></i>
-                                            </div>
-                                            <div class="plus-icon">
-                                                <i class="fa-sharp fa-regular fa-plus"></i>
-                                            </div>
-                                        </a>
-                                    </div>
-                                </div>
-                                <!-- single blog area end -->
-                            </div>
-                            <div class="col-lg-3 col-md-6 col-sm-12">
-                                <!-- single blog area start -->
-                                <div class="single-blog-area-start">
-                                    <a href="blog-details.html" class="thumbnail">
-                                        <img src="assets/images/blog/03.jpg" alt="blog-area">
-                                    </a>
-                                    <div class="blog-body">
-                                        <div class="top-area">
-                                            <div class="single-meta">
-                                                <i class="fa-light fa-clock"></i>
-                                                <span>15 Sep, 2023</span>
-                                            </div>
-                                            <div class="single-meta">
-                                                <i class="fa-regular fa-folder"></i>
-                                                <span>Modern Fashion</span>
-                                            </div>
-                                        </div>
-                                        <a href="blog-details.html">
-                                            <h4 class="title">
-                                                Fixation: Fueling Your Passion
-                                                for All Things Stylish
-                                            </h4>
-                                        </a>
-                                        <a href="blog-details.html" class="shop-now-goshop-btn">
-                                            <span class="text">Read Details</span>
-                                            <div class="plus-icon">
-                                                <i class="fa-sharp fa-regular fa-plus"></i>
-                                            </div>
-                                            <div class="plus-icon">
-                                                <i class="fa-sharp fa-regular fa-plus"></i>
-                                            </div>
-                                        </a>
-                                    </div>
-                                </div>
-                                <!-- single blog area end -->
-                            </div>
-                            <div class="col-lg-3 col-md-6 col-sm-12">
-                                <!-- single blog area start -->
-                                <div class="single-blog-area-start">
-                                    <a href="blog-details.html" class="thumbnail">
-                                        <img src="assets/images/blog/04.jpg" alt="blog-area">
-                                    </a>
-                                    <div class="blog-body">
-                                        <div class="top-area">
-                                            <div class="single-meta">
-                                                <i class="fa-light fa-clock"></i>
-                                                <span>15 Sep, 2023</span>
-                                            </div>
-                                            <div class="single-meta">
-                                                <i class="fa-regular fa-folder"></i>
-                                                <span>Modern Fashion</span>
-                                            </div>
-                                        </div>
-                                        <a href="blog-details.html">
-                                            <h4 class="title">
-                                                Fashion Fixation: Fueling Your Passion
-                                                for All Things Stylish
-                                            </h4>
-                                        </a>
-                                        <a href="blog-details.html" class="shop-now-goshop-btn">
-                                            <span class="text">Read Details</span>
-                                            <div class="plus-icon">
-                                                <i class="fa-sharp fa-regular fa-plus"></i>
-                                            </div>
-                                            <div class="plus-icon">
-                                                <i class="fa-sharp fa-regular fa-plus"></i>
-                                            </div>
-                                        </a>
-                                    </div>
-                                </div>
-                                <!-- single blog area end -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  
 </div>

@@ -11,7 +11,7 @@ class OrderController extends Controller
 {
     public function index(Request $request){
         return view('admin.order.index',[
-            'orders' => Order::with(['user','items'])->paginate(30)
+            'orders' => Order::with(['user','items'])->paginate(20)
         ]);
     }
 

@@ -7,7 +7,7 @@ use App\Models\Wishlist;
 use COM;
 use Illuminate\Support\Facades\Session;
 use Livewire\Component;
-
+use App\Models\Category;
 class Header extends Component
 {
     public $cart_items = [];
@@ -15,6 +15,9 @@ class Header extends Component
     public $wishlist_items = [];
     public $cart_count = 0;
     public $cart_subtotal = 0;
+    public $categories;
+
+    protected $listeners = ['cartUpdated' => 'updateCart'];
 
     public function mount()
     {
@@ -23,19 +26,24 @@ class Header extends Component
         if ($this->user) {
             $this->cart_items = Cart::where('user_id', $this->user)->get();
             $this->cart_count = $this->cart_items->count();
-            $this->cart_subtotal = $this->cart_items->sum('total_amount');
+            $this->cart_subtotal = $this->cart_items->sum(function($item) {
+                return $item->product->variationPrice['selling_price'] * $item->qty;
+            });
             $this->wishlist_items = Wishlist::where('user_id', $this->user)->get();
         }
+        $this->categories = Category::where('parent_id', null)
+            ->with('subcategories')
+            ->get();
     }
     
-    protected $listeners = ['cartUpdated' => 'updateCart'];
-
     public function updateCart()
     {
         if ($this->user) {
             $this->cart_items = Cart::where('user_id', $this->user)->get();
             $this->cart_count = $this->cart_items->count();
-            $this->cart_subtotal = $this->cart_items->sum('total_amount');
+            $this->cart_subtotal = $this->cart_items->sum(function($item) {
+                return $item->product->variationPrice['selling_price'] * $item->qty;
+            });
         }
     }
 
@@ -44,11 +52,33 @@ class Header extends Component
         return view('livewire.website.header', [
             'cart_items' => $this->cart_items,
             'wishlist_items' => $this->wishlist_items,
+            'categories' => $this->categories,
         ]);
     }
 
     public function emitCartUpdated()
     {
         $this->emit('cartUpdated');
+    }
+
+    public function removeFromCart($rowId)
+    {
+        try {
+            // Remove the item from the database
+            $cart = Cart::find($rowId);
+            // dd($cart);
+            if ($cart) {
+                $cart->delete();
+                
+                // Update the cart counts and totals
+                $this->updateCart();
+                
+                // Optional: Add success message
+                session()->flash('success', 'Item removed from cart');
+            }
+        } catch (\Exception $e) {
+            // Handle any errors
+            session()->flash('error', 'Could not remove item from cart');
+        }
     }
 }

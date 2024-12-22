@@ -15408,7 +15408,7 @@ body.sal-disabled [data-sal|=flip] {
 }
 
 .search-header-area-main {
-  padding: 31px 0;
+  padding: 8px 0;
   border-top: 1px solid #E2E2E2;
 }
 
@@ -16602,14 +16602,14 @@ a.over_link {
 }
 
 #category-active-four .submenu li a::after {
-  content: "\f054";
+  content: "\f111";
   font-family: var(--font-three);
   top: 50%;
   transform: translateY(-50%);
   left: 40px;
   right: auto;
   position: absolute;
-  font-size: 16px;
+  font-size: 4px;
 }
 
 #category-active-four .submenu li a.mobile-menu-link {
@@ -16633,14 +16633,14 @@ a.over_link {
 }
 
 #category-active-menu .submenu li a::after {
-  content: "\f054";
+  content: "\f111";
   font-family: var(--font-three);
   top: 50%;
   transform: translateY(-50%);
   left: 40px;
   right: auto;
   position: absolute;
-  font-size: 16px;
+  font-size: 5px;
 }
 
 #category-active-menu .submenu li a.mobile-menu-link {
@@ -18364,6 +18364,7 @@ li.with-megamenu:hover .rts-megamenu {
   padding: 15px;
   background: #F5F6F7;
   border-radius: 6px;
+  width:90%;
 }
 
 .single-shopping-card-one .image-and-action-area-wrapper {
@@ -18588,7 +18589,7 @@ li.with-megamenu:hover .rts-megamenu {
 
 .single-shopping-card-one .cart-counter-action .quantity-edit input {
   padding: 0;
-  max-width: 10px;
+  max-width: 18px;
   font-weight: 600;
 }
 
@@ -23342,7 +23343,7 @@ body.modal-open {
 
 .single-cart-area-list.main .quantity-edit input {
   padding: 0;
-  max-width: 10px;
+  max-width: 18px;
   font-weight: 600;
 }
 
@@ -24208,11 +24209,11 @@ body.modal-open {
   color: #2C3C28;
 }
 
-.rts-billing-details-area form .single-input {
+.rts-billing-details-area  .single-input {
   margin-bottom: 35px;
 }
 
-.rts-billing-details-area form .single-input input {
+.rts-billing-details-area .single-input input {
   height: 50px;
   width: 100%;
   border: 1px solid #E8E8E8;
@@ -24220,11 +24221,11 @@ body.modal-open {
   margin-top: 10px;
 }
 
-.rts-billing-details-area form .single-input input:focus {
+.rts-billing-details-area .single-input input:focus {
   border: 1px solid var(--color-primary);
 }
 
-.rts-billing-details-area form .single-input textarea {
+.rts-billing-details-area .single-input textarea {
   height: 180px;
   width: 100%;
   border: 1px solid #E8E8E8;
@@ -24233,11 +24234,11 @@ body.modal-open {
   padding: 12px;
 }
 
-.rts-billing-details-area form .single-input textarea:focus {
+.rts-billing-details-area .single-input textarea:focus {
   border: 1px solid var(--color-primary);
 }
 
-.rts-billing-details-area form .half-input-wrapper {
+  .rts-billing-details-area .half-input-wrapper {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -24245,7 +24246,7 @@ body.modal-open {
   margin-bottom: 35px;
 }
 
-.rts-billing-details-area form .half-input-wrapper .single-input {
+.rts-billing-details-area .half-input-wrapper .single-input {
   flex-basis: 50%;
   margin-bottom: 0;
 }

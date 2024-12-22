@@ -43,7 +43,9 @@
 
     <link rel="stylesheet" href="/admin-assets/vendor/libs/apex-charts/apex-charts.css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
-   
+      <!-- Add Bootstrap CSS -->
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEJv+uG3cHIXBv8BO93Q5fBzYxJYP0cbkz6N5N16zD4e51s2pyR6rmctebB4Z" crossorigin="anonymous">
+  
     <!-- Page CSS -->
 
     <!-- Helpers -->

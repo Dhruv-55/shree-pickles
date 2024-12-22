@@ -12,6 +12,14 @@ class Order extends Model
     const PLACED = 1, DISPATCHED = 2, SHIPPED = 3, APPROVED = 4, CANCELED = 5;
     const COD = 1, ONLINE = 2;
 
+    const STATUS = [
+        self::PLACED => 'Placed',
+        self::DISPATCHED => 'Dispatched', 
+        self::SHIPPED => 'Shipped',
+        self::APPROVED => 'Approved',
+        self::CANCELED => 'Canceled'
+    ];
+
     protected $casts = [
         'address' => 'object'
     ];
@@ -30,6 +38,10 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+
+    public function getStatusAttribute($value){
+        return self::STATUS[$value];
+    }
     /**
      * Calculate the percentage change in sales compared to the previous day,
      * and return a status indicating if it's higher or lower.
@@ -84,4 +96,6 @@ class Order extends Model
 
         return $result;
     }
+
 }
+

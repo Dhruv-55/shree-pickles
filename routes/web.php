@@ -6,6 +6,7 @@ use App\Http\Controllers\Website\AuthController;
 use App\Http\Controllers\Website\WebsiteController;
 use App\Http\Controllers\Website\CartController;
 use App\Http\Controllers\Website\CheckoutController;
+use App\Http\Controllers\Admin\ProductDetailController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class,'home'])->name('website-home');
 
 Route::prefix('product')->group(function () {
-    Route::get('/',[ProductController::class,'index'])->name('website-product-view');
+    Route::get('/{category?}',[ProductController::class,'index'])->name('website-product-view');
     Route::get('/detail/{slug}',[ProductController::class,'detail'])->name('website-product-detail');
 });
 
@@ -38,3 +39,4 @@ Route::prefix('auth')->group(function () {
 Route::get('/cart',[CartController::class,'index'])->name('website-cart');
 // Route::get('/wishlist',[WishlistController::class,'index'])->name('website-wishlist');
 Route::match(['get','post'],'/checkout',[CheckoutController::class,'index'])->name('website-checkout');
+Route::get('/order/success',[CheckoutController::class,'success'])->name('website-order-success');

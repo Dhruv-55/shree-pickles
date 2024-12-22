@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 class BannerController extends Controller
 {
     public function index(){
-        $banners = Banner::all();
+        $banners = Banner::paginate(20);
         return view('admin.banner.index',compact('banners'));
     }
 

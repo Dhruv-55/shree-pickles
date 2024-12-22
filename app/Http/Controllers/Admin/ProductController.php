@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use App\Models\Category;
 
 class ProductController extends Controller
 {
    public function index(Request $request){
     return view('admin.product.index',[
-        'products' => Product::paginate(30)
+        'products' => Product::paginate(20)
     ]);
    }
 
@@ -24,10 +25,9 @@ class ProductController extends Controller
                'name' => 'required',
                'slug' => 'required',
                'category_id' => 'required',
+               'parent_category_id' => 'required',
                'short_description' => 'required',
                'description' => 'required',
-               'original_price' => 'required',
-               'selling_price' => 'required',
                'images' => 'required|array'  // Ensure it's an array
            ]);
    
@@ -36,14 +36,12 @@ class ProductController extends Controller
                $product = Product::create([
                    'name' => $request->name,
                    'slug' => Str::slug($request->slug),
+                   'parent_category_id' => $request->parent_category_id,
                    'category_id' => $request->category_id,
                    'brand_id' => $request->brand_id,
                    'short_description' => $request->short_description,
                    'description' => $request->description,
-                   'original_price' => $request->original_price,
-                   'selling_price' => $request->selling_price,
                    'trending' => $request->trending ?? 2,
-                   'quantity' => $request->quantity
                ]);
    
                $imagePaths = []; // Initialize an array to store image paths
@@ -90,24 +88,21 @@ class ProductController extends Controller
                'name' => 'required',
                'slug' => 'required',
                'category_id' => 'required',
+               'parent_category_id' => 'required',
                'short_description' => 'required',
                'description' => 'required',
-               'original_price' => 'required',
-               'selling_price' => 'required',
-           ]);
+              ]);
    
            // Update basic product details
            $product->name = $request->name;
            $product->slug = $request->slug;
            $product->category_id = $request->category_id;
+           $product->parent_category_id = $request->parent_category_id;
            $product->qty_type = $request->qty_type;
            $product->brand_id = $request->brand_id;
            $product->short_description = $request->short_description;
            $product->description = $request->description;
-           $product->original_price = $request->original_price;
-           $product->selling_price = $request->selling_price;
            $product->trending = $request->trending ?? 2;
-           $product->quantity = $request->quantity;
            $product->status = $request->status;
    
            // Handle image uploads (if any)
@@ -185,6 +180,15 @@ class ProductController extends Controller
     }
 
     return response()->json(['success' => false, 'message' => 'Image not found.']);
+}
+
+public function getChildCategories($parentId)
+{
+    $childCategories = Category::where('parent_id', $parentId)
+        ->active()
+        ->get();
+    
+    return response()->json($childCategories);
 }
 
 }

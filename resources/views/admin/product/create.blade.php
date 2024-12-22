@@ -34,12 +34,22 @@
             <div class="row">
                 <div class="col-md-3">
                     <div class="mb-3">
-                      <label for="exampleFormControlSelect1" class="form-label">Category</label>
-                      <select class="form-select" name="category_id" id="exampleFormControlSelect1" aria-label="Default select example">
-                        <option value="">Select Category</option>
-                        @foreach (\App\Models\Category::active()->get() as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }} >{{ $category->name }}</option>                            
+                      <label for="parent_category" class="form-label">Parent Category</label>
+                      <select class="form-select" name="parent_category_id" id="parent_category" aria-label="Default select example">
+                        <option value="">Select Parent Category</option>
+                        @foreach (\App\Models\Category::whereNull('parent_id')->active()->get() as $category)
+                            <option value="{{ $category->id }}" {{ old('parent_category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>                            
                         @endforeach
+                      </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                      <label for="child_category" class="form-label">Child Category</label>
+                      <select class="form-select" name="category_id" id="child_category" aria-label="Default select example">
+                        <option value="">Select Child Category</option>
                       </select>
                     </div>
                 </div>
@@ -64,19 +74,7 @@
                       </select>
                     </div>
                 </div>
-                <div class="col-md-3">
-                  <div class="mb-3">
-                    <label for="exampleFormControlSelect1" class="form-label">Variation</label>
-                    <select class="form-select" name="qty_type" id="exampleFormControlSelect1" aria-label="Default select example">
-                      <option value="">Select Variation</option>
-                        @foreach (\App\Models\Product::variations() as $key => $variation)
-                            <option value="{{ $key }}" {{ old('qty_type') == $key ? 'selected' : '' }}>
-                                {{ $variation }}
-                            </option>
-                        @endforeach
-                    </select>
-                  </div>
-              </div>
+               
             </div>
             <div class="row">
               <div class="col-md-6">
@@ -103,24 +101,7 @@
               </div>
             </div>
             <div class="row">
-                <div class="col-md-4">
-                    <div class="mb-3">
-                      <label class="form-label" for="basic-default-company">Original Price</label>
-                      <input type="number" class="form-control" id="basic-default-company" name="original_price"  value="{{ old('original_price')}}" />
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="mb-3">
-                      <label class="form-label" for="basic-default-company">Selling Price</label>
-                      <input type="number" class="form-control" id="basic-default-company" name="selling_price"  value="{{ old('selling_price')}}" />
-                    </div>
-                </div>
-                <div class="col-md-4">
-                  <div class="mb-3">
-                    <label class="form-label" for="basic-default-company">Quantity</label>
-                    <input type="number" class="form-control" id="basic-default-company" name="quantity"  value="{{ old('quantity')}}" />
-                  </div>
-              </div>
+              
               <div class="col-md-6">
                 <div class="mb-3">
                   <label for="formFile" class="form-label">Images</label>
@@ -138,4 +119,43 @@
   </div>
   </div>
 </div>
+  @stop
+  
+  @section('page-js')
+  <script>
+    document.getElementById('parent_category').addEventListener('change', function() {
+        let parentId = this.value;
+        let childSelect = document.getElementById('child_category');
+        
+        // Clear existing options
+        childSelect.innerHTML = '<option value="">Select Child Category</option>';
+        
+        if(parentId) {
+            // Fetch child categories
+            fetch(`/admin/product/get-child-categories/${parentId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        data.forEach(category => {
+                            let option = document.createElement('option');
+                            option.value = category.id;
+                            option.textContent = category.name;
+                            childSelect.appendChild(option);
+                        });
+                    } else {
+                        console.error('Expected array of categories but got:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching child categories:', error);
+                    childSelect.innerHTML = '<option value="">Error loading categories</option>';
+                });
+        }
+    });
+  </script>
   @stop

@@ -1,14 +1,78 @@
 <div>
+    <style>
+        .description-wrapper {
+    position: relative;
+}
+
+.tooltip-trigger {
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip-text {
+    visibility: hidden;
+    width: 300px;
+    background-color: #333;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: normal;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.tooltip-trigger:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Add arrow to tooltip */
+.tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+}
+.variable-product-type .nice-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-right: 20px;
+}.nice-select-area-wrapper-and-button {
+  display: flex;
+  background: #F3F4F6;
+  align-items: center;
+  padding: 16px 15px;
+  border-radius: 0 0 6px 6px;
+  gap: 10px;
+  justify-content: space-between;
+  border-top: 1px solid #D7DDE8;
+}
+    </style>
     <div class="rts-navigation-area-breadcrumb bg_light-1">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
                     <div class="navigator-breadcrumb-wrapper">
-                        <a href="index.html">Home</a>
+                        <a href="{{ route('website-home') }}">Home</a>
                         <i class="fa-regular fa-chevron-right"></i>
-                        <a class="#" href="index.html">Beverage</a>
-                        <i class="fa-regular fa-chevron-right"></i>
-                        <a class="current" href="index.html">2L Mum Water</a>
+                        <a class="current" href="{{ route('website-product-view') }}">Product</a>
                     </div>
                 </div>
             </div>
@@ -64,65 +128,74 @@
                                             <div class="product-status">
                                                 <span class="product-catagory">{{ $product->category->name }}</span>
                                                 <div class="rating-stars-group">
-                                                    @for($i = 1; $i <= 5; $i++)
+                                                    {{-- @for($i = 1; $i <= 5; $i++)
                                                         <div class="rating-star">
                                                             <i class="fas fa-{{ $i <= $product->rating ? 'star' : ($i - 0.5 <= $product->rating ? 'star-half-alt' : 'star') }}"></i>
                                                         </div>
-                                                    @endfor
-                                                    <span>{{ $product->reviews_count }} Reviews</span>
+                                                    @endfor --}}
+                                                    {{-- <span>{{ $product->reviews_count }} Reviews</span> --}}
                                                 </div>
                                             </div>
                                             <h2 class="product-title">{{ $product->name }}</h2>
-                                            <p class="mt--20 mb--20">{{ $product->description }}</p>
-                                            <span class="product-price mb--15 d-block" style="color: #DC2626; font-weight: 600;">
-                                                ${{ number_format($product->selling_price, 2) }}
-                                                @if($product->original_price > $product->selling_price)
-                                                    <span class="old-price ml--15">${{ number_format($product->original_price, 2) }}</span>
-                                                @endif
-                                            </span>
+                                            <div class="description-wrapper" style="position: relative;">
+                                                <p class="mt--20 mb--20">
+                                                    {{ Str::limit($product->description, 100) }}
+                                                    <span class="tooltip-trigger">
+                                                        <i class="fa-regular fa-eye"></i>
+                                                        <span class="tooltip-text button plus">{{ $product->description }}</span>
+                                                    </span>
+                                                </p>
+                                            </div>
+
+                                            @if($product->variations && count($product->variations) > 0)
+                                            <div class="variation-selector mb--20">
+                                                <label for="variation" class="mb--10" style="font-weight: 500;">Select Variation:</label>
+                                                <select id="variation" class="form-select" wire:model="selectedVariation">
+                                                    <option value="">Select a variation</option>
+                                                    @foreach($product->variations as $variation)
+                                                        <option value="{{ $variation->id }}" 
+                                                                {{ $variation->quantity < 1 ? 'disabled' : '' }}>
+                                                            {{ App\Models\ProductVariation::variation($variation->variation_id) }} 
+                                                            - ${{ number_format($variation->selling_price, 2) }}
+                                                            {{ $variation->quantity < 1 ? '(Out of Stock)' : '' }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            @endif
+                                                
+                                            <div class="price-area mb--15" wire:key="price-area-{{ $currentPrice['selling_price'] }}">
+                                                <span class="product-price mb--15 d-block" style="color: #DC2626; font-weight: 600;">
+                                                    ${{ number_format($currentPrice['selling_price'], 2) }}
+                                                    @if($currentPrice['original_price'] > $currentPrice['selling_price'])
+                                                        <span class="old-price ml--15">${{ number_format($currentPrice['original_price'], 2) }}</span>
+                                                    @endif
+                                                </span>
+                                            </div>
                                             <div class="product-bottom-action">
-                                                <div class="cart-edits">
-                                                    <div class="quantity-edit action-item">
-                                                        <button class="button" wire:click="decrementQuantity"><i class="fal fa-minus minus"></i></button>
-                                                        <input type="text" class="input" wire:model="quantity" />
-                                                        <button class="button plus" wire:click="incrementQuantity">+<i class="fal fa-plus plus"></i></button>
+                                                {{-- {{dd($cartItem)}} --}}
+                                                @if($cartItem)
+                                                
+                                                    <div class="cart-edits">
+                                                        <div class="quantity-edit action-item">
+                                                            <button class="button" wire:click="decrementCartItem"><i class="fal fa-minus minus"></i></button>
+                                                            <input type="text" class="input" value="{{ $cartItem->qty }}" readonly />
+                                                            <button class="button plus" wire:click="incrementCartItem">+<i class="fal fa-plus plus"></i></button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <button wire:click="{{ auth()->check() ? 'addToCart' : 'redirectToLogin' }}" 
-                                                        class="rts-btn btn-primary radious-sm with-icon">
-                                                    <div class="btn-text">Add To Cart</div>
-                                                    <div class="arrow-icon">
-                                                        <i class="fa-regular fa-cart-shopping"></i>
-                                                    </div>
-                                                </button>
-                                                <button wire:click="{{ auth()->check() ? 'toggleWishlist' : 'redirectToLogin' }}" 
+                                                @else
+                                                    <button wire:click="{{ Session::has('user') ? 'addToCart' : 'redirectToLogin' }}" 
+                                                            class="rts-btn btn-primary radious-sm with-icon">
+                                                        <div class="btn-text">Add To Cart</div>
+                                                        <div class="arrow-icon">
+                                                            <i class="fa-regular fa-cart-shopping"></i>
+                                                        </div>
+                                                    </button>
+                                                @endif
+                                                {{-- <button wire:click="{{ Session::has('user') ? 'toggleWishlist' : 'redirectToLogin' }}" 
                                                         class="rts-btn btn-primary ml--20">
                                                     <i class="fa-{{ $product->isWishlisted ? 'solid' : 'light' }} fa-heart"></i>
-                                                </button>
-                                            </div>
-                                            <div class="product-uniques">
-                                                <span class="sku product-unipue mb--10">
-                                                    <span style="font-weight: 400; margin-right: 10px;">SKU: </span> 
-                                                    {{ $product->sku }}
-                                                </span>
-                                                <span class="catagorys product-unipue mb--10">
-                                                    <span style="font-weight: 400; margin-right: 10px;">Categories: </span>
-                                                    {{ $product->category->name }}
-                                                </span>
-                                                <span class="tags product-unipue mb--10">
-                                                    <span style="font-weight: 400; margin-right: 10px;">Brand: </span>
-                                                    {{ $product->brand ? $product->brand->name : '' }}
-                                                </span>
-                                                @if($product->life_time)
-                                                <span class="tags product-unipue mb--10">
-                                                    <span style="font-weight: 400; margin-right: 10px;">LIFE: </span>
-                                                    {{ $product->life_time }}
-                                                </span>
-                                                @endif
-                                                <span class="tags product-unipue mb--10">
-                                                    <span style="font-weight: 400; margin-right: 10px;">Type: </span>
-                                                    {{ $product->type }}
-                                                </span>
+                                                </button> --}}
                                             </div>
                                             {{-- <div class="share-option-shop-details">
                                                 <div class="single-share-option">
@@ -164,69 +237,12 @@
                             <div class="tab-content" id="myTabContent">
                                 <div class="tab-pane fade   show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
                                     <div class="single-tab-content-shop-details">
-                                        <p class="disc">
-                                            Uninhibited carnally hired played in whimpered dear gorilla koala depending and much yikes off far quetzal goodness and from for grimaced goodness unaccountably and meadowlark near unblushingly crucial scallop tightly neurotic hungrily some and dear furiously this apart.
-                                        </p>
-                                        <div class="details-row-2">
-                                            <div class="left-area">
-                                                <img src="assets/images/shop/06.jpg" alt="shop">
-                                            </div>
-                                            <div class="right">
-                                                <h4 class="title">All Natural Italian-Style Chicken Meatballs</h4>
-                                                <p class="mb--25">
-                                                    Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. ibero sit amet quam egestas semperAenean ultricies mi vitae est Mauris placerat eleifend.
-                                                </p>
-                                                <ul class="bottom-ul">
-                                                    <li>Elementum sociis rhoncus aptent auctor urna justo</li>
-                                                    <li>Habitasse venenatis gravida nisl, sollicitudin posuere</li>
-                                                </ul>
-                                            </div>
-                                        </div>
+                                        {!! $product->detail->detail !!}
                                     </div>
                                 </div>
                                 <div class="tab-pane fade" id="profile-tab-pane" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
                                     <div class="single-tab-content-shop-details">
-                                        <p class="disc">
-                                            Uninhibited carnally hired played in whimpered dear gorilla koala depending and much yikes off far quetzal goodness and from for grimaced goodness unaccountably and meadowlark near unblushingly crucial scallop tightly neurotic hungrily some and dear furiously this apart.
-                                        </p>
-                                        <div class="table-responsive table-shop-details-pd">
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Kitchen Fade Defy</th>
-                                                        <th>5KG</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>PRAN Full Cream Milk Powder</td>
-                                                        <td>3KG</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Net weight</td>
-                                                        <td>8KG</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Brand</td>
-                                                        <td>Reactheme</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Item code</td>
-                                                        <td>4000000005</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Product type</td>
-                                                        <td>Powder milk</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <p class="cansellation mt--20">
-                                            <span> Return/cancellation:</span> No change will be applicable which are already delivered to customer. If product quality or quantity problem found then customer can return/cancel their order on delivery time with presence of delivery person.
-                                        </p>
-                                        <p class="note">
-                                            <span>Note:</span> Product delivery duration may vary due to product availability in stock.
-                                        </p>
+                                       {!! $product->detail->information !!}
                                     </div>
                                 </div>
                                 <div class="tab-pane fade" id="profile-tab-panes" role="tabpanel" aria-labelledby="profile-tabt" tabindex="0">
@@ -363,49 +379,13 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-3 col-lg-4 col-md-12 offset-xl-1  rts-sticky-column-item">
-                        <div class="theiaStickySidebar">
-                            <div class="shop-sight-sticky-sidevbar  mb--20">
-                                <h6 class="title">Available offers</h6>
-                                <div class="single-offer-area">
-                                    <div class="icon">
-                                        <img src="assets/images/shop/01.svg" alt="icon">
-                                    </div>
-                                    <div class="details">
-                                        <p>Get %5 instant discount for the 1st Flipkart Order using Ekomart UPI T&C</p>
-                                    </div>
-                                </div>
-                                <div class="single-offer-area">
-                                    <div class="icon">
-                                        <img src="assets/images/shop/02.svg" alt="icon">
-                                    </div>
-                                    <div class="details">
-                                        <p>Flat $250 off on Citi-branded Credit Card EMI Transactions on orders of $30 and above T&C</p>
-                                    </div>
-                                </div>
-                                <div class="single-offer-area">
-                                    <div class="icon">
-                                        <img src="assets/images/shop/03.svg" alt="icon">
-                                    </div>
-                                    <div class="details">
-                                        <p>Free Worldwide Shipping on all
-                                            orders over $100</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="our-payment-method">
-                                <h5 class="title">Guaranteed Safe Checkout</h5>
-                                <img src="assets/images/shop/03.png" alt="">
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- rts grocery feature area start -->
-    <div class="rts-grocery-feature-area rts-section-gap bg_light-1">
+    {{-- <div class="rts-grocery-feature-area rts-section-gap bg_light-1">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
@@ -519,7 +499,7 @@
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <button wire:click="{{ auth()->check() ? 'addToCart(' . $relatedProduct->id . ')' : 'redirectToLogin' }}" 
+                                                <button wire:click="{{ Session::has('user') ? 'addToCart(' . $relatedProduct->id . ')' : 'redirectToLogin' }}" 
                                                         class="rts-btn btn-primary radious-sm with-icon">
                                                     <div class="btn-text">Add To Cart</div>
                                                     <div class="arrow-icon">
@@ -541,7 +521,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
     <!-- rts grocery feature area end -->
 
 

@@ -12,7 +12,7 @@ class Product extends Model
     const ACTIVE = 1 , INACTIVE =2;
 
     protected $fillable = [
-        'category_id','brand_id','name','slug','short_description','description','original_price','selling_price','quantity','trending','status','images','qty_type'
+        'category_id','parent_category_id','brand_id','name','slug','short_description','description','trending','status','images'
     ];
 
     protected $casts = [
@@ -23,22 +23,24 @@ class Product extends Model
     }
 
     public function category(){
-      return $this->belongsTo(Category::class);
+      return $this->belongsTo(Category::class,'category_id','id');
     }
 
-  
-
-    // public function getPrimaryImageAttribute(){
-    //   return ProductImage::where('product_id',$this->id)->oldest()->first()->image;
-    // }
-
-    public function getDiscountAttribute(){
-      
-      return number_format(($this->original_price -$this->selling_price)*0.1);
+    public function subcategory(){
+      return $this->belongsTo(Category::class,'parent_category_id','id');
     }
 
+    public function variations()
+    {
+        return $this->hasMany(ProductVariation::class);
+    }
 
-    public static function variations()
+    public function hasVariations()
+    {
+        return $this->variations()->count() > 0;
+    }
+
+    public static function variationTypes()
     {
         return [
             1 => '250g',
@@ -49,13 +51,25 @@ class Product extends Model
         ];
     }
 
-    // Helper method to get variation name by key
-    public static function variation($key)
+    public function variation($key)
     {
-        return static::variations()[$key] ?? '';
+        if ($this->variations()->where('id', $key)->exists()) {
+            return $this->variations()->where('id', $key)->first()->name;
+        }
+        
+        $variations = self::variationTypes();
+        return $variations[$key] ?? '';
     }
 
-    // Product model
+    public function getDiscountAttribute(){
+      
+      return number_format(($this->original_price -$this->selling_price)*0.1);
+    }
+
+    // public function getVariationsAttribute()
+    // {
+    //     return $this->variations()->get();
+    // }
 
     public static function getFirstImage($productId)
     {
@@ -159,5 +173,46 @@ class Product extends Model
 
     public function getDiscountPercentageAttribute(){
       return number_format(($this->original_price -$this->selling_price)*0.1);
+    }
+    public function detail(){
+      return $this->hasOne(ProductDetail::class,'product_id','id');
+    }
+
+    public static function getVariations($productId)
+    {
+        return ProductVariation::where('product_id', $productId)->get();
+    }
+
+    public function getVariationAttribute(){
+      $variation = $this->variations()->first();  
+      if($variation){
+        return ProductVariation::variation($variation->variation_id);
+      }
+      return null;
+    }
+
+    public function getVariationPricesAttribute(){
+      return $this->variations()->get();
+    }
+
+    public function getVariationPriceAttribute()
+    {
+        $variation = $this->variations()->first();
+        
+        if (!$variation) {
+            return [
+                'selling_price' => 0,
+                'original_price' => 0
+            ];
+        }
+
+        return [
+            'selling_price' => $variation->selling_price,
+            'original_price' => $variation->original_price
+        ];
+    }
+    
+    public function getVariationQuantityAttribute(){
+      return $this->variations()->first()->quantity;
     }
 }

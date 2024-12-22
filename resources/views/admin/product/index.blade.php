@@ -43,9 +43,16 @@
                                 <i class="bx bx-dots-vertical-rounded"></i>
                                 </button>
                                 <div class="dropdown-menu">
-                                <a class="dropdown-item" href="{{ route('admin-product-update',['id' => $product->id])}}"
-                                    ><i class="bx bx-edit-alt me-1"></i> Edit</a
-                                >
+                                        <a class="dropdown-item" href="{{ route('admin-product-update',['id' => $product->id])}}"
+                                            ><i class="bx bx-edit-alt me-1"></i> Edit</a
+                                        >
+                                        <a class="dropdown-item" href="{{ route('admin-product-variation-view',['id' => $product->id])}}"
+                                            ><i class="bx bx-info-circle me-1"></i> Variation</a
+                                        >
+                                        <a class="dropdown-item" href="{{ route('admin-product-detail-manage',['id' => $product->id])}}"
+                                            ><i class="bx bx-info-circle me-1"></i> Detail</a
+                                        >
+
                                 </div>
                             </div>
                             </td>
@@ -55,6 +62,7 @@
                     </tbody>
                 </table>
                 </div>
+                {{$products->links()}}
         </div>
     </div>
 </div>

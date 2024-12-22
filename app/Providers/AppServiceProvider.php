@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Illuminate\Pagination\Paginator;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -26,5 +27,6 @@ class AppServiceProvider extends ServiceProvider
         Livewire::styles([
             'priority' => 100 // Lower number = higher priority
         ]);
+        Paginator::useBootstrap(); // Tell Laravel to use Bootstrap pagination globally
     }
 }

@@ -66,6 +66,7 @@
                     </tbody>
                 </table>
                 </div>
+                {{$banners->links()}}
             @else
                 <div class="alert alert-info">No banners found</div>
             @endif
